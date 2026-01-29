@@ -4,6 +4,8 @@ mod monitor;
 mod arbitrage;
 mod matcher;
 mod trader;
+mod config;
+mod positions;
 
 use anyhow::Result;
 use tracing::{info, error};
