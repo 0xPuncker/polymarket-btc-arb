@@ -24,11 +24,6 @@ impl PolymarketClient {
         let response = self
             .client
             .get(&url)
-            .query(&[
-                ("limit", "100"),
-                ("order", "desc"),
-                ("sort", "volume_24h"),
-            ])
             .send()
             .await?
             .error_for_status()?;

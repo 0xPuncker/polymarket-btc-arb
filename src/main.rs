@@ -3,6 +3,7 @@ mod models;
 mod monitor;
 mod arbitrage;
 mod matcher;
+mod trader;
 
 use anyhow::Result;
 use tracing::{info, error};

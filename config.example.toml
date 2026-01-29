@@ -1,0 +1,93 @@
+# Polymarket-BTC Arbitrage Monitor Configuration
+# Copy this file to config.toml and fill in your values
+
+[general]
+# Minimum profit threshold for executing trades (5% = 0.05)
+min_profit_threshold = 0.05
+
+# Maximum position size in USD
+max_position_size = 1000.0
+
+# Maximum allowed slippage (1% = 0.01)
+max_slippage = 0.01
+
+[polymarket]
+# Polymarket wallet configuration
+rpc_url = "https://polygon-rpc.com"
+
+# Your private key (DO NOT commit to Git!)
+# Leave empty for monitoring-only mode
+# private_key = "0x..."
+
+# Network: "polygon" or custom
+network = "polygon"
+
+[bitcoin]
+# Bitcoin protocol to use
+# Options: "lightning", "ordinals", "stacks", "rsk", "liquid"
+protocol = "lightning"
+
+# Bitcoin protocol-specific config
+
+[bitcoin.lightning]
+# LND node configuration
+endpoint = "localhost:10009"
+
+# Optional: Path to macaroon file (read-only admin macaroon)
+# macaroon_path = "/path/to/admin.macaroon"
+
+# Optional: Path to TLS certificate
+# cert_path = "/path/to/tls.cert"
+
+[bitcoin.ordinals]
+# Ordinals wallet configuration
+address = "bc1q..."
+ordinal_id = "1234...5678"
+
+[bitcoin.stacks]
+# Stacks wallet configuration
+network = "mainnet"
+
+# Stacks private key (DO NOT commit to Git!)
+# private_key = "b8..."
+
+[bitcoin.rsk]
+# RSK (Rootstock) configuration
+rpc_url = "https://public-node.rsk.co"
+
+# RSK private key (DO NOT commit to Git!)
+# private_key = "0x..."
+
+[bitcoin.liquid]
+# Liquid Network configuration
+rpc_url = "https://blockstream.info/liquid/api"
+
+# Liquid private key (DO NOT commit to Git!)
+# private_key = "L1..."
+
+[trading]
+# Enable/disable auto-trading
+auto_execute = false
+
+# Require manual confirmation before executing trades
+require_confirmation = true
+
+# Maximum concurrent trades
+max_concurrent_trades = 3
+
+[risk]
+# Maximum daily loss limit
+max_daily_loss = 500.0
+
+# Stop trading if daily loss exceeds threshold
+stop_on_max_loss = true
+
+# Maximum open positions
+max_open_positions = 5
+
+[logging]
+# Log level: "error", "warn", "info", "debug", "trace"
+level = "info"
+
+# Log file path
+file = "/var/log/polymarket-btc-arb.log"
