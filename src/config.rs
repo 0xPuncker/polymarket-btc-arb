@@ -52,38 +52,51 @@ pub struct BitcoinConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LightningConfig {
-    pub endpoint: String,
-    #[serde(default)]
+    pub endpoint: Option<String>,
     pub macaroon_path: Option<String>,
-    #[serde(default)]
     pub cert_path: Option<String>,
+    #[serde(default)]
+    pub predyx_api_key: Option<String>,
+    #[serde(default)]
+    pub ordinals_wallet_address: Option<String>,
+    #[serde(default)]
+    pub ordinals_api_endpoint: Option<String>,
+    #[serde(default)]
+    pub stacks_api_key: Option<String>,
+    #[serde(default)]
+    pub stacks_network: String,
+    #[serde(default)]
+    pub rsk_rpc_url: Option<String>,
+    #[serde(default)]
+    pub rsk_private_key: Option<String>,
+    #[serde(default)]
+    pub liquid_rpc_url: Option<String>,
+    #[serde(default)]
+    pub liquid_private_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrdinalsConfig {
-    pub address: String,
-    pub ordinal_id: String,
+    pub ordinals_wallet_address: Option<String>,
+    pub ordinals_api_endpoint: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StacksConfig {
-    pub network: String,
-    #[serde(default)]
-    pub private_key: Option<String>,
+    pub stacks_api_key: Option<String>,
+    pub stacks_network: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RskConfig {
-    pub rpc_url: String,
-    #[serde(default)]
-    pub private_key: Option<String>,
+    pub rsk_rpc_url: Option<String>,
+    pub rsk_private_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LiquidConfig {
-    pub rpc_url: String,
-    #[serde(default)]
-    pub private_key: Option<String>,
+    pub liquid_rpc_url: Option<String>,
+    pub liquid_private_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -123,19 +136,50 @@ pub struct TradeConfig {
     pub min_profit_threshold: Decimal,
     pub max_slippage: Decimal,
     pub require_confirmation: bool,
+    pub risk: RiskConfig,
 }
 
 impl TradeConfig {
     pub fn from_config(config: &Config) -> Self {
         Self {
-            polymarket_wallet: config.polymarket.clone(),
-            btc_wallet: config.bitcoin.clone(),
+            polymarket_wallet: PolymarketWalletConfig {
+                rpc_url: config.polymarket.rpc_url.clone(),
+                private_key: config.polymarket.private_key.clone(),
+                network: config.polymarket.network.clone(),
+            },
+            btc_wallet: BtcWalletConfig {
+                protocol: config.bitcoin.protocol.clone(),
+                lightning: config.bitcoin.lightning.clone(),
+                ordinals: config.bitcoin.ordinals.clone(),
+                stacks: config.bitcoin.stacks.clone(),
+                rsk: config.bitcoin.rsk.clone(),
+                liquid: config.bitcoin.liquid.clone(),
+            },
             max_position_size: config.general.max_position_size,
             min_profit_threshold: config.general.min_profit_threshold,
             max_slippage: config.general.max_slippage,
             require_confirmation: config.trading.require_confirmation,
+            risk: config.risk.clone(),
         }
     }
+}
+
+// Wallet configuration types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PolymarketWalletConfig {
+    pub rpc_url: String,
+    pub private_key: Option<String>,
+    pub network: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BtcWalletConfig {
+    pub protocol: String,
+    pub lightning: Option<LightningConfig>,
+    pub ordinals: Option<OrdinalsConfig>,
+    pub stacks: Option<StacksConfig>,
+    pub rsk: Option<RskConfig>,
+    pub liquid: Option<LiquidConfig>,
 }
 
 impl Default for Config {
@@ -222,13 +266,10 @@ impl Default for TradeConfig {
             min_profit_threshold: default_min_profit(),
             max_slippage: default_max_slippage(),
             require_confirmation: default_require_confirmation(),
+            risk: RiskConfig::default(),
         }
     }
 }
-
-// Re-export types for trader module
-pub use PolymarketConfig as PolymarketWalletConfig;
-pub use BitcoinConfig as BtcWalletConfig;
 
 // Default value functions
 fn default_min_profit() -> Decimal {

@@ -42,12 +42,15 @@ pub enum TradeSide {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum PositionStatus {
+pub enum PositionState {
     Open,
     Closed,
     Failed,
     Partial,
 }
+
+// Type alias for backwards compatibility
+pub use PositionState as PositionStatus;
 
 /// Position manager tracks all open and closed positions
 pub struct PositionManager {

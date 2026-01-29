@@ -14,14 +14,33 @@ pub struct BtcPredictionMarket {
     pub order_books: Vec<BtcOrderBook>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, std::fmt::Display)]
 pub enum BtcMarketType {
+    #[serde(rename = "lightning")]
     LightningNetwork,
+    #[serde(rename = "ordinals")]
     Ordinals,
+    #[serde(rename = "stacks")]
     Stacks,
+    #[serde(rename = "rsk")]
     RSK,
+    #[serde(rename = "liquid")]
     Liquid,
+    #[serde(rename = "custom")]
     Custom(String),
+}
+
+impl std::fmt::Display for BtcMarketType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BtcMarketType::LightningNetwork => write!(f, "LightningNetwork"),
+            BtcMarketType::Ordinals => write!(f, "Ordinals"),
+            BtcMarketType::Stacks => write!(f, "Stacks"),
+            BtcMarketType::RSK => write!(f, "RSK"),
+            BtcMarketType::Liquid => write!(f, "Liquid"),
+            BtcMarketType::Custom(s) => write!(f, "{}", s),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

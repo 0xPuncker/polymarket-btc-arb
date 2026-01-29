@@ -5,14 +5,18 @@ use crate::models::{MarketOdds, ArbitrageOpportunity};
 use crate::matcher::OutcomeMatcher;
 
 pub struct ArbitrageDetector {
-    min_profit_threshold: Decimal,
     matcher: OutcomeMatcher,
 }
 
 impl ArbitrageDetector {
     pub fn new() -> Self {
         Self {
-            min_profit_threshold: Decimal::from_str_exact("0.05").unwrap(), // 5% minimum
+            matcher: OutcomeMatcher::new(),
+        }
+    }
+
+    pub fn with_threshold(_min_profit: Decimal) -> Self {
+        Self {
             matcher: OutcomeMatcher::new(),
         }
     }
@@ -21,6 +25,7 @@ impl ArbitrageDetector {
         &self,
         polymarket_odds: &[MarketOdds],
         btc_odds: &[MarketOdds],
+        min_profit: Decimal,
     ) -> Option<ArbitrageOpportunity> {
         // Find matching outcomes and compare odds using fuzzy matching
         for poly_odd in polymarket_odds {
@@ -28,7 +33,7 @@ impl ArbitrageDetector {
                 // Calculate implied profit
                 let implied_profit = self.calculate_implied_profit(poly_odd, &best_match);
 
-                if implied_profit >= self.min_profit_threshold {
+                if implied_profit >= min_profit {
                     debug!(
                         "Found arbitrage: Poly {} vs BTC {} = {}% profit (match: {} -> {})",
                         poly_odd.odds,
