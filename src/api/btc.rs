@@ -18,13 +18,13 @@ use crate::models::btc_market::BtcMarketType;
 /// Currently a placeholder - integrate actual APIs below.
 pub struct BtcMarketClient {
     api_endpoint: Option<String>,
-    market_type: BtcMarketType,
+    market_type: crate::models::btc_market::BtcMarketType,
     auth_token: Option<String>,
 }
 
 impl BtcMarketClient {
     /// Create a new client with a specific Bitcoin market type
-    pub fn new(market_type: BtcMarketType) -> Self {
+    pub fn new(market_type: crate::models::btc_market::BtcMarketType) -> Self {
         Self {
             api_endpoint: None,
             market_type,
@@ -36,7 +36,7 @@ impl BtcMarketClient {
     pub fn lightning(endpoint: String) -> Self {
         Self {
             api_endpoint: Some(endpoint),
-            market_type: BtcMarketType::LightningNetwork,
+            market_type: crate::models::btc_market::BtcMarketType::LightningNetwork,
             auth_token: None,
         }
     }
@@ -45,7 +45,7 @@ impl BtcMarketClient {
     pub fn ordinals(endpoint: String) -> Self {
         Self {
             api_endpoint: Some(endpoint),
-            market_type: BtcMarketType::Ordinals,
+            market_type: crate::models::btc_market::BtcMarketType::Ordinals,
             auth_token: None,
         }
     }
@@ -54,7 +54,7 @@ impl BtcMarketClient {
     pub fn stacks(endpoint: String, auth_token: Option<String>) -> Self {
         Self {
             api_endpoint: Some(endpoint),
-            market_type: BtcMarketType::Stacks,
+            market_type: crate::models::btc_market::BtcMarketType::Stacks,
             auth_token,
         }
     }
@@ -63,7 +63,7 @@ impl BtcMarketClient {
     pub fn rsk(endpoint: String) -> Self {
         Self {
             api_endpoint: Some(endpoint),
-            market_type: BtcMarketType::RSK,
+            market_type: crate::models::btc_market::BtcMarketType::RSK,
             auth_token: None,
         }
     }
@@ -72,7 +72,7 @@ impl BtcMarketClient {
     pub fn liquid(endpoint: String) -> Self {
         Self {
             api_endpoint: Some(endpoint),
-            market_type: BtcMarketType::Liquid,
+            market_type: crate::models::btc_market::BtcMarketType::Liquid,
             auth_token: None,
         }
     }

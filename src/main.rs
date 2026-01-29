@@ -14,17 +14,22 @@ use tracing_subscriber;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize logging
+    let log_level = std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string());
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive(tracing::Level::INFO.into())
+                .add_directive(&format!("{}={}", log_level))
         )
         .init();
 
     info!("Starting Polymarket-BTC Arbitrage Monitor v0.1.0");
 
+    // Load config
+    let config_path = std::env::var("POLYMARKET_CONFIG")
+        .unwrap_or_else(|_| "config.toml".to_string());
+
     // Create monitor instance
-    let monitor = monitor::MarketMonitor::new().await?;
+    let monitor = monitor::MarketMonitor::new(&config_path).await?;
 
     // Start monitoring
     if let Err(e) = monitor.run().await {

@@ -1,9 +1,12 @@
 pub mod polymarket;
 pub mod btc_market;
 
+pub use btc_market::BtcMarketType;
+
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use crate::models::btc_market::BtcMarketType;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Market {

@@ -4,7 +4,6 @@ use rust_decimal::Decimal;
 use rust_decimal::prelude::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
-use std::str::FromStr;
 
 use crate::models::ArbitrageOpportunity;
 use crate::config::{Config};
@@ -187,6 +186,14 @@ impl TradeExecutor for BtcTradeExecutor {
 
         // Implement based on protocol
         match self.config.protocol.as_str() {
+            "lightning" => self.execute_lightning_trade(opportunity).await,
+            "ordinals" => self.execute_ordinals_trade(opportunity).await,
+            "stacks" => self.execute_stacks_trade(opportunity).await,
+            "rsk" => self.execute_rsk_trade(opportunity).await,
+            "liquid" => self.execute_liquid_trade(opportunity).await,
+            _ => self.execute_generic_trade(opportunity).await,
+        }
+    }
             "lightning" => self.execute_lightning_trade(opportunity).await,
             "ordinals" => self.execute_ordinals_trade(opportunity).await,
             "stacks" => self.execute_stacks_trade(opportunity).await,
