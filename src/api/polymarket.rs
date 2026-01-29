@@ -1,15 +1,13 @@
 use anyhow::Result;
 use reqwest::Client;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
-use rust_decimal::Decimal;
+use std::str::FromStr;
 
 use crate::api::MarketClient;
 use crate::models::{Market, MarketOdds, MarketSource};
 
 const GAMMA_API_BASE: &str = "https://gamma-api.polymarket.com";
 
-/// Polymarket Gamma API client
 pub struct PolymarketClient {
     client: Client,
 }
@@ -34,7 +32,7 @@ impl MarketClient for PolymarketClient {
             .error_for_status()?;
 
         let markets_data: serde_json::Value = response.json().await?;
-
+        
         let mut markets = Vec::new();
         
         if let Some(markets_array) = markets_data.as_array() {
@@ -42,9 +40,11 @@ impl MarketClient for PolymarketClient {
                 if let Some(obj) = m.as_object() {
                     let id = obj.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
                     let question = obj.get("question").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let outcomes = obj.get("outcomes").and_then(|v| v.as_array())
-                        .map(|arr| {
-                            arr.iter()
+                    
+                    let outcomes = obj.get("outcomes")
+                        .and_then(|arr| arr.as_array())
+                        .map(|a| {
+                            a.iter()
                                 .filter_map(|v| v.as_str())
                                 .map(|s| s.to_string())
                                 .collect::<Vec<_>>()
@@ -53,12 +53,12 @@ impl MarketClient for PolymarketClient {
                     
                     let volume = obj.get("volume")
                         .and_then(|v| v.as_f64())
-                        .map(Decimal::from);
+                        .map(|f| rust_decimal::Decimal::from(f));
                     
                     markets.push(Market {
                         id: id.clone(),
                         question: question.clone(),
-                        description: Some(obj.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()).unwrap_or_default()),
+                        description: obj.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
                         outcomes: outcomes.clone(),
                         end_time: None,
                         volume: volume,
@@ -90,9 +90,10 @@ impl MarketClient for PolymarketClient {
                     for order in orders_array {
                         if let Some(obj) = order.as_object() {
                             let outcome = obj.get("outcomeToken").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                            let price = obj.get("price").and_then(|v| v.as_str())
+                            let price = obj.get("price")
+                                .and_then(|v| v.as_str())
                                 .and_then(|s| s.parse::<f64>().ok())
-                                .map(|p| Decimal::from(p / 100.0));
+                                .map(|p| rust_decimal::Decimal::from(p / 100.0));
                             
                             if let Some(p) = price {
                                 odds.push(MarketOdds {
@@ -100,7 +101,7 @@ impl MarketClient for PolymarketClient {
                                     outcome: outcome.clone(),
                                     odds: p,
                                     source: MarketSource::Polymarket,
-                                    timestamp: Utc::now(),
+                                    timestamp: chrono::Utc::now(),
                                 });
                             }
                         }

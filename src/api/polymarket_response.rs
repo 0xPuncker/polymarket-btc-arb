@@ -1,20 +1,34 @@
-use serde::{Deserialize, Serialize};
+use crate::models::Market;
+use crate::models::MarketOdds;
+use crate::models::MarketSource;
 use chrono::{DateTime, Utc};
-use rust_decimal::Decimal;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolymarketMarketsResponse {
-    pub data: Vec<PolymarketMarket>,
+    pub markets: Vec<PolymarketMarket>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolymarketMarket {
-    pub market_id: String,
+    pub id: String,
     pub question: String,
     pub description: String,
     pub outcomes: Vec<String>,
+    #[serde(rename = "endDate")]
     pub end_date: Option<String>,
     pub volume: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PolymarketMarketResponse {
+    pub id: String,
+    pub question: String,
+    pub description: String,
+    pub outcomes: Vec<String>,
+    #[serde(rename = "endDate")]
+    pub end_date: Option<String>,
+    pub volume: f64,
+    #[serde(rename = "orderBook")]
     pub order_book: Option<PolymarketOrderBook>,
 }
 

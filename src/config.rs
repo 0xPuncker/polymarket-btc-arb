@@ -53,31 +53,18 @@ pub struct BitcoinConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LightningConfig {
     pub endpoint: Option<String>,
+    #[serde(default)]
     pub macaroon_path: Option<String>,
+    #[serde(default)]
     pub cert_path: Option<String>,
     #[serde(default)]
     pub predyx_api_key: Option<String>,
-    #[serde(default)]
-    pub ordinals_wallet_address: Option<String>,
-    #[serde(default)]
-    pub ordinals_api_endpoint: Option<String>,
-    #[serde(default)]
-    pub stacks_api_key: Option<String>,
-    #[serde(default)]
-    pub stacks_network: String,
-    #[serde(default)]
-    pub rsk_rpc_url: Option<String>,
-    #[serde(default)]
-    pub rsk_private_key: Option<String>,
-    #[serde(default)]
-    pub liquid_rpc_url: Option<String>,
-    #[serde(default)]
-    pub liquid_private_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrdinalsConfig {
     pub ordinals_wallet_address: Option<String>,
+    #[serde(default)]
     pub ordinals_api_endpoint: Option<String>,
 }
 
@@ -127,59 +114,20 @@ pub struct LoggingConfig {
     pub file: String,
 }
 
-// Trade execution configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TradeConfig {
-    pub polymarket_wallet: PolymarketWalletConfig,
-    pub btc_wallet: BtcWalletConfig,
-    pub max_position_size: Decimal,
-    pub min_profit_threshold: Decimal,
-    pub max_slippage: Decimal,
-    pub require_confirmation: bool,
-    pub risk: RiskConfig,
-}
+impl Config {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let content = fs::read_to_string(path)?;
+        let config: Self = toml::from_str(&content)?;
+        Ok(config)
+    }
 
-impl TradeConfig {
-    pub fn from_config(config: &Config) -> Self {
-        Self {
-            polymarket_wallet: PolymarketWalletConfig {
-                rpc_url: config.polymarket.rpc_url.clone(),
-                private_key: config.polymarket.private_key.clone(),
-                network: config.polymarket.network.clone(),
-            },
-            btc_wallet: BtcWalletConfig {
-                protocol: config.bitcoin.protocol.clone(),
-                lightning: config.bitcoin.lightning.clone(),
-                ordinals: config.bitcoin.ordinals.clone(),
-                stacks: config.bitcoin.stacks.clone(),
-                rsk: config.bitcoin.rsk.clone(),
-                liquid: config.bitcoin.liquid.clone(),
-            },
-            max_position_size: config.general.max_position_size,
-            min_profit_threshold: config.general.min_profit_threshold,
-            max_slippage: config.general.max_slippage,
-            require_confirmation: config.trading.require_confirmation,
-            risk: config.risk.clone(),
+    pub fn load_or_default<P: AsRef<Path>>(path: P) -> Result<Self> {
+        if path.as_ref().exists() {
+            Self::load(path)
+        } else {
+            Ok(Self::default())
         }
     }
-}
-
-// Wallet configuration types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PolymarketWalletConfig {
-    pub rpc_url: String,
-    pub private_key: Option<String>,
-    pub network: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BtcWalletConfig {
-    pub protocol: String,
-    pub lightning: Option<LightningConfig>,
-    pub ordinals: Option<OrdinalsConfig>,
-    pub stacks: Option<StacksConfig>,
-    pub rsk: Option<RskConfig>,
-    pub liquid: Option<LiquidConfig>,
 }
 
 impl Default for Config {
@@ -257,20 +205,6 @@ impl Default for LoggingConfig {
     }
 }
 
-impl Default for TradeConfig {
-    fn default() -> Self {
-        Self {
-            polymarket_wallet: PolymarketWalletConfig::default(),
-            btc_wallet: BtcWalletConfig::default(),
-            max_position_size: default_max_position(),
-            min_profit_threshold: default_min_profit(),
-            max_slippage: default_max_slippage(),
-            require_confirmation: default_require_confirmation(),
-            risk: RiskConfig::default(),
-        }
-    }
-}
-
 // Default value functions
 fn default_min_profit() -> Decimal {
     Decimal::from_str("0.05").unwrap_or(Decimal::ZERO)
@@ -318,20 +252,4 @@ fn default_log_level() -> String {
 
 fn default_log_file() -> String {
     "/var/log/polymarket-btc-arb.log".to_string()
-}
-
-impl Config {
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let content = fs::read_to_string(path)?;
-        let config: Self = toml::from_str(&content)?;
-        Ok(config)
-    }
-
-    pub fn load_or_default<P: AsRef<Path>>(path: P) -> Result<Self> {
-        if path.as_ref().exists() {
-            Self::load(path)
-        } else {
-            Ok(Self::default())
-        }
-    }
 }

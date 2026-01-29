@@ -1,13 +1,13 @@
-pub mod polymarket;
+pub mod polymarket_api;
 pub mod predyx;
 pub mod ordinals;
 
 use async_trait::async_trait;
 use anyhow::Result;
 
-pub use crate::api::polymarket::PolymarketClient;
+pub use crate::api::polymarket_api::PolymarketClient;
 pub use crate::api::predyx::PredyxRealClient;
-pub use crate::api::ordinals::OrdinalsMarketplaceClient;
+pub use crate::api::ordinals::OrdinalsMarketplace;
 pub use crate::models::{Market, MarketOdds};
 
 #[async_trait]
@@ -48,7 +48,7 @@ impl MarketClient for PredyxRealClient {
 }
 
 #[async_trait]
-impl MarketClient for OrdinalsMarketplaceClient {
+impl MarketClient for OrdinalsMarketplace {
     async fn fetch_markets(&self) -> Result<Vec<Market>> {
         self.fetch_markets().await
     }
