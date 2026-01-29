@@ -5,10 +5,10 @@ pub mod ordinals;
 use async_trait::async_trait;
 use anyhow::Result;
 
-use crate::api::polymarket::PolymarketClient;
-use crate::api::predyx::PredyxRealClient;
-use crate::api::ordinals::OrdinalsMarketplace;
-use crate::models::{Market, MarketOdds};
+pub use crate::api::polymarket::PolymarketClient;
+pub use crate::api::predyx::PredyxRealClient;
+pub use crate::api::ordinals::OrdinalsMarketplaceClient;
+pub use crate::models::{Market, MarketOdds};
 
 #[async_trait]
 pub trait MarketClient: Send + Sync {
@@ -20,15 +20,15 @@ pub trait MarketClient: Send + Sync {
 #[async_trait]
 impl MarketClient for PolymarketClient {
     async fn fetch_markets(&self) -> Result<Vec<Market>> {
-        self.fetch_raw_markets().await
+        self.fetch_markets().await
     }
 
     async fn fetch_odds(&self, market_id: &str) -> Result<Vec<MarketOdds>> {
-        self.fetch_raw_odds(market_id).await
+        self.fetch_odds(market_id).await
     }
 
     fn is_configured(&self) -> bool {
-        true
+        self.is_configured()
     }
 }
 
@@ -48,7 +48,7 @@ impl MarketClient for PredyxRealClient {
 }
 
 #[async_trait]
-impl MarketClient for OrdinalsMarketplace {
+impl MarketClient for OrdinalsMarketplaceClient {
     async fn fetch_markets(&self) -> Result<Vec<Market>> {
         self.fetch_markets().await
     }
