@@ -4,8 +4,7 @@ pub mod btc_market;
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use crate::models::polymarket::PolymarketMarket;
-use crate::models::btc_market::BtcMarketType;
+use std::fmt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Market {
@@ -56,6 +55,16 @@ impl ArbitrageOpportunity {
             implied_profit,
             confidence,
             detected_at: Utc::now(),
+        }
+    }
+}
+
+impl std::fmt::Display for MarketSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MarketSource::Polymarket => write!(f, "Polymarket"),
+            MarketSource::BitcoinPredictionMarket => write!(f, "BitcoinPredictionMarket"),
+            MarketSource::Custom(s) => write!(f, "{}", s),
         }
     }
 }
