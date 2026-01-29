@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use crate::models::MarketOdds;
+use chrono::Utc;
 
 pub struct OutcomeMatcher {
     similarity_threshold: f64,
@@ -78,5 +79,80 @@ impl OutcomeMatcher {
 impl Default for OutcomeMatcher {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+
+    fn create_test_odds(outcome: &str, odds: Decimal) -> MarketOdds {
+        MarketOdds {
+            market_id: "test-market".to_string(),
+            outcome: outcome.to_string(),
+            odds,
+            source: crate::models::MarketSource::Polymarket,
+            timestamp: Utc::now(),
+        }
+    }
+
+    #[test]
+    fn test_exact_match() {
+        let matcher = OutcomeMatcher::new();
+        assert!(matcher.outcomes_match("Yes", "yes"));
+        assert!(matcher.outcomes_match("Trump wins", "trump wins"));
+    }
+
+    #[test]
+    fn test_normalization() {
+        let matcher = OutcomeMatcher::new();
+        assert!(matcher.outcomes_match("YES - Trump", "yes trump"));
+        assert!(matcher.outcomes_match("Biden: 2024", "biden 2024"));
+    }
+
+    #[test]
+    fn test_jaccard_similarity() {
+        let matcher = OutcomeMatcher::new();
+        // Perfect matches (Jaccard = 1.0)
+        assert!(matcher.outcomes_match("Trump wins", "Trump Wins"));
+        assert!(matcher.outcomes_match("YES - Trump", "Trump - Yes"));
+        assert!(matcher.outcomes_match("YES Trump wins", "Trump wins YES"));
+        // High similarity (Jaccard > 0.8)
+        assert!(matcher.outcomes_match("YES Trump", "Trump YES")); // 2/2 = 1.0
+        // Low similarity - should not match
+        assert!(!matcher.outcomes_match("Trump wins", "Biden wins")); // 0.0
+        assert!(!matcher.outcomes_match("YES - Trump wins election", "Trump Wins - Yes")); // 3/4 = 0.75 < 0.8
+    }
+
+    #[test]
+    fn test_find_best_match() {
+        let matcher = OutcomeMatcher::new();
+        let target = create_test_odds("YES - Trump wins", Decimal::from_str("0.6").unwrap());
+
+        let candidates = vec![
+            create_test_odds("Trump Wins - Yes", Decimal::from_str("0.55").unwrap()),
+            create_test_odds("Biden wins - Yes", Decimal::from_str("0.4").unwrap()),
+            create_test_odds("Donald Trump Victory", Decimal::from_str("0.62").unwrap()),
+        ];
+
+        let best = matcher.find_best_match(&target, &candidates);
+        assert!(best.is_some());
+        assert_eq!(best.unwrap().outcome, "Trump Wins - Yes");
+    }
+
+    #[test]
+    fn test_empty_strings() {
+        let matcher = OutcomeMatcher::new();
+        assert!(matcher.outcomes_match("", ""));
+        assert!(!matcher.outcomes_match("", "Trump wins"));
+    }
+
+    #[test]
+    fn test_special_characters() {
+        let matcher = OutcomeMatcher::new();
+        assert!(matcher.outcomes_match("@Trump#2024$", "trump 2024"));
+        assert!(matcher.outcomes_match("YES-Trump,Wins", "yes trump wins"));
     }
 }

@@ -212,3 +212,38 @@ pub mod btc_utils {
         std::cmp::max(1, (sats / 1_000_000) * 5)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_sats_to_btc() {
+        let sats = 100_000_000; // 1 BTC
+        let btc = crate::api::btc::btc_utils::sats_to_btc(sats);
+        assert_eq!(btc, Decimal::from(1));
+    }
+
+    #[test]
+    fn test_btc_to_sats() {
+        let btc = Decimal::from(1);
+        let sats = crate::api::btc::btc_utils::btc_to_sats(&btc);
+        assert_eq!(sats, 100_000_000);
+    }
+
+    #[test]
+    fn test_fractional_btc() {
+        let sats = 50_000_000; // 0.5 BTC
+        let btc = crate::api::btc::btc_utils::sats_to_btc(sats);
+        assert_eq!(btc, Decimal::from_str("0.5").unwrap());
+    }
+
+    #[test]
+    fn test_ln_fee_estimate() {
+        let sats = 100_000;
+        let fee = crate::api::btc::btc_utils::estimate_ln_fee(sats);
+        assert!(fee > 0);
+        assert!(fee < sats); // Fee should be less than amount
+    }
+}
