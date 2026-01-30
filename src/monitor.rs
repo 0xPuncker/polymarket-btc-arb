@@ -2,7 +2,7 @@ use anyhow::Result;
 use tracing::info;
 use tokio::time::{sleep, Duration};
 
-use crate::api::polymarket_api::PolymarketClient;
+use crate::api::{PolymarketClient, MarketClient};
 use crate::models::Market;
 use crate::config::Config;
 
@@ -15,7 +15,7 @@ impl Monitor {
     pub async fn new() -> Result<Self> {
         let config = Config::default();
         
-        info!("Starting Polymarket-BTC Arbitrage Monitor v0.4.0");
+        info!("Starting Polymarket-BTC Arbitrage Monitor v0.10.0");
         info!("Configuration loaded");
         info!("Auto-execute: {}", config.trading.auto_execute);
 
@@ -39,7 +39,7 @@ impl Monitor {
 
     async fn tick(&self) -> Result<()> {
         info!("Fetching Polymarket markets...");
-        let markets = self.client.fetch_markets().await?;
+        let markets: Vec<Market> = self.client.fetch_markets().await?;
         
         info!("Fetched {} markets", markets.len());
         
