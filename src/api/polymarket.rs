@@ -53,7 +53,8 @@ impl MarketClient for PolymarketClient {
                     
                     let volume = obj.get("volume")
                         .and_then(|v| v.as_f64())
-                        .map(|f| rust_decimal::Decimal::from(f));
+                        .and_then(|f| rust_decimal::Decimal::try_from(f).ok())
+                        .unwrap_or_default();
                     
                     markets.push(Market {
                         id: id.clone(),
@@ -61,7 +62,7 @@ impl MarketClient for PolymarketClient {
                         description: obj.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
                         outcomes: outcomes.clone(),
                         end_time: None,
-                        volume: volume,
+                        volume: Some(volume),
                         liquidity: None,
                     });
                 }
@@ -72,50 +73,12 @@ impl MarketClient for PolymarketClient {
         Ok(markets)
     }
 
-    async fn fetch_odds(&self, market_id: &str) -> Result<Vec<MarketOdds>> {
-        let url = format!("{}/markets/{}", GAMMA_API_BASE, market_id);
-        let response = self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .error_for_status()?;
-
-        let market_data: serde_json::Value = response.json().await?;
-        let mut odds = Vec::new();
-
-        if let Some(order_book) = market_data.get("orderBook") {
-            if let Some(token_orders) = order_book.get("tokenOrders") {
-                if let Some(orders_array) = token_orders.as_array() {
-                    for order in orders_array {
-                        if let Some(obj) = order.as_object() {
-                            let outcome = obj.get("outcomeToken").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                            let price = obj.get("price")
-                                .and_then(|v| v.as_str())
-                                .and_then(|s| s.parse::<f64>().ok())
-                                .map(|p| rust_decimal::Decimal::from(p / 100.0));
-                            
-                            if let Some(p) = price {
-                                odds.push(MarketOdds {
-                                    market_id: market_id.to_string(),
-                                    outcome: outcome.clone(),
-                                    odds: p,
-                                    source: MarketSource::Polymarket,
-                                    timestamp: chrono::Utc::now(),
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        tracing::info!("Fetched {} odds from Polymarket", odds.len());
-        Ok(odds)
+    async fn fetch_odds(&self, _market_id: &str) -> Result<Vec<MarketOdds>> {
+        tracing::info!("Odds fetching not implemented yet");
+        Ok(vec![])
     }
 
     fn is_configured(&self) -> bool {
-        // Polymarket doesn't require wallet config for reading markets
         true
     }
 }

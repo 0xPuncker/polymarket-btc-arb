@@ -1,8 +1,3 @@
-use crate::models::Market;
-use crate::models::MarketOdds;
-use crate::models::MarketSource;
-use chrono::{DateTime, Utc};
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolymarketMarketsResponse {
     pub markets: Vec<PolymarketMarket>,

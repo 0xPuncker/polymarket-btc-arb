@@ -1,18 +1,19 @@
 mod api;
 mod models;
 mod config;
+mod matcher;
 
 use tracing::info;
 use tokio;
 
-use crate::api::polymarket_api::PolymarketClient;
-use crate::models::Market;
+use crate::api::MarketClient;
+use crate::api::PolymarketClient;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().init();
 
-    info!("Starting Polymarket-BTC Arbitrage Monitor v0.5.0 (Clean Version)");
+    info!("Starting Polymarket-BTC Arbitrage Monitor v0.10.0 (Minimal Version)");
 
     let client = PolymarketClient::new();
 
@@ -21,25 +22,25 @@ async fn main() {
             info!("Received Ctrl+C, shutting down...");
             std::process::exit(0);
         },
-        _ = run_monitor(&client) => {},
+        _ = run_monitor(client) => {},
     }
 }
 
-async fn run_monitor(client: &PolymarketClient) {
+async fn run_monitor(client: impl MarketClient) {
     info!("Starting market monitor loop...");
 
     loop {
         match client.fetch_markets().await {
             Ok(markets) => {
-                info!("Fetched {} markets from Polymarket", markets.len());
+                let count = markets.len();
+                info!("Fetched {} markets", count);
 
-                // Log top 3 markets by volume
                 for market in markets.iter().take(3) {
                     info!("Market: {} (Question: {})", market.id, market.question);
                 }
             }
             Err(e) => {
-                tracing::error!("Error fetching markets: {}", e);
+                info!("Error fetching markets: {}", e);
             }
         }
 
